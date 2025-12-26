@@ -1,0 +1,3077 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokerTimer by davidkosar.cz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Russo+One&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #1a5a1a;
+            --dark-green: #0d3d0d;
+            --light-green: #2d7d2d;
+            --accent-gold: #ffd700;
+            --timer-bg: #1a1a2e;
+            --timer-text: #00ff00;
+            --white: #ffffff;
+            --gray-light: #e0e0e0;
+            --gray: #888888;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--white);
+        }
+
+        /* App Container - Fullscreen Widescreen Layout */
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 5px 15px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background: linear-gradient(to bottom, var(--primary-green), var(--dark-green));
+            border-radius: 10px 10px 0 0;
+            border: 2px solid var(--light-green);
+            border-bottom: none;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--white);
+            text-shadow: 2px 2px 4px var(--shadow);
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tournament-name {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--white);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 15px;
+            border-radius: 6px;
+        }
+
+        .chip-count {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent-gold);
+            background: #222;
+            padding: 5px 15px;
+            border-radius: 6px;
+            border: 2px solid #444;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: linear-gradient(to bottom, var(--dark-green), #0a2a0a);
+            border: 2px solid var(--light-green);
+            border-top: none;
+            border-bottom: none;
+            padding: 10px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        /* Timer Section - Full Width at Top */
+        .timer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+            border-radius: 12px;
+            padding: 10px 30px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .timer-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 30px;
+        }
+
+        .timer-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            position: absolute;
+            left: 60px;
+        }
+
+        .level-display {
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .level-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .level-value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 3rem;
+            color: var(--dark-green);
+            line-height: 1;
+        }
+
+        .main-timer {
+            font-family: 'Russo One', 'Segoe UI', sans-serif;
+            font-size: 25vh;
+            font-weight: 400;
+            color: #1a1a2e;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.15);
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
+
+        .timer-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .timer-progress {
+            position: absolute;
+            right: 60px;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: #ddd;
+            stroke-width: 12;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: var(--primary-green);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 377;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .blinds-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+        }
+
+        .blinds-display {
+            text-align: center;
+        }
+
+        .blinds-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .blinds-value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 8vh;
+            font-weight: 400;
+            color: var(--dark-green);
+            line-height: 1;
+        }
+
+        .ante-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 3px;
+        }
+
+        .ante-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .ante-value {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .next-level-box {
+            background: rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .next-level-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .next-blinds {
+            font-family: 'Russo One', sans-serif;
+            font-size: 4vh;
+            color: #444;
+        }
+
+        .next-ante {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* Info Bar */
+        .info-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .info-box .label {
+            display: block;
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .info-box .value {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark-green);
+        }
+
+        /* Quick Control Groups */
+        .quick-control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255,255,255,0.95);
+            padding: 8px 15px;
+            border-radius: 8px;
+            min-width: 100px;
+        }
+
+        .quick-control-group .qc-label {
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .quick-control-group .qc-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quick-control-group .qc-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark-green);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .quick-btn {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .quick-btn.plus {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .quick-btn.plus:hover {
+            background: var(--light-green);
+            transform: scale(1.1);
+        }
+
+        .quick-btn.minus {
+            background: #c0392b;
+            color: white;
+        }
+
+        .quick-btn.minus:hover {
+            background: #e74c3c;
+            transform: scale(1.1);
+        }
+
+        /* Stats Section - Below Timer */
+        .stats-section {
+            display: flex;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .stats-column {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-column h3 {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .stats-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+        }
+
+        .stat-label {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--white);
+            font-size: 1.1rem;
+        }
+
+        .prize-structure .stat-value {
+            color: var(--accent-gold);
+        }
+
+        /* Control Bar */
+        .control-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: linear-gradient(to bottom, #333, #222);
+            border-radius: 0 0 10px 10px;
+            border: 2px solid var(--light-green);
+            border-top: none;
+            flex-shrink: 0;
+        }
+
+        .control-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 12px;
+            background: linear-gradient(to bottom, #555, #444);
+            border: 1px solid #666;
+            border-radius: 6px;
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 65px;
+        }
+
+        .control-btn:hover:not(:disabled) {
+            background: linear-gradient(to bottom, #666, #555);
+            transform: translateY(-1px);
+        }
+
+        .control-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(to bottom, var(--primary-green), var(--dark-green));
+            border-color: var(--light-green);
+            min-width: 80px;
+        }
+
+        .control-btn.primary:hover {
+            background: linear-gradient(to bottom, var(--light-green), var(--primary-green));
+        }
+
+        .btn-icon {
+            font-size: 1.2rem;
+        }
+
+        .btn-label {
+            font-size: 0.55rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #2a2a3e;
+            border-radius: 15px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-small {
+            max-width: 450px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #444;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-body h3 {
+            margin: 20px 0 15px;
+            font-size: 1rem;
+            color: #aaa;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #444;
+            text-align: right;
+            flex-shrink: 0;
+            background: #2a2a3e;
+            border-radius: 0 0 15px 15px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1a1a2e;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-green);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        /* Blind Structure */
+        .blind-structure-header {
+            display: grid;
+            grid-template-columns: 60px minmax(100px, 1fr) minmax(100px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) 40px;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #444;
+        }
+
+        .blind-structure-header span {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .blind-structure-header span:first-child {
+            text-align: left;
+        }
+
+        .blind-structure {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .blind-level {
+            display: grid;
+            grid-template-columns: 60px minmax(100px, 1fr) minmax(100px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+        }
+
+        .blind-level.is-break {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+        }
+
+        .blind-level span {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .blind-level.is-break span {
+            color: #ffc107;
+        }
+
+        .blind-level input, .blind-level select {
+            padding: 8px;
+            background: #1a1a2e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: var(--white);
+            font-size: 0.9rem;
+        }
+
+        .blind-level .btn-remove {
+            background: #c0392b;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-add-level, .btn-add-break {
+            width: 48%;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px dashed #666;
+            border-radius: 6px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+            margin-right: 2%;
+        }
+
+        .btn-add-break {
+            border-color: #ffc107;
+            color: #ffc107;
+            margin-right: 0;
+        }
+
+        .btn-add-level:hover {
+            background: rgba(255,255,255,0.2);
+            color: var(--white);
+        }
+
+        .btn-add-break:hover {
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        /* Prize Structure in Settings */
+        .prize-structure-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 40px;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #444;
+        }
+
+        .prize-structure-header span {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .prize-structure-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .prize-place {
+            display: grid;
+            grid-template-columns: 80px 1fr 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+        }
+
+        .prize-place span {
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+        }
+
+        .prize-place input {
+            padding: 8px;
+            background: #1a1a2e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: var(--white);
+            font-size: 0.9rem;
+        }
+
+        .prize-place .btn-remove {
+            background: #c0392b;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-buttons {
+            margin-top: 10px;
+        }
+
+        .btn-save {
+            padding: 12px 30px;
+            background: linear-gradient(to bottom, var(--primary-green), var(--dark-green));
+            border: none;
+            border-radius: 8px;
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(to bottom, var(--light-green), var(--primary-green));
+        }
+
+        /* Sound Settings */
+        .sound-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sound-group {
+            background: rgba(0,0,0,0.2);
+            padding: 12px 15px;
+            border-radius: 8px;
+        }
+
+        .sound-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .sound-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sound-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px;
+            background: #1a1a2e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: var(--white);
+            font-size: 0.85rem;
+        }
+
+        .sound-input::file-selector-button {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .btn-test-sound, .btn-clear-sound {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-test-sound {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-test-sound:hover {
+            background: #2980b9;
+        }
+
+        .btn-clear-sound {
+            background: #7f8c8d;
+            color: white;
+        }
+
+        .btn-clear-sound:hover {
+            background: #95a5a6;
+        }
+
+        .sound-status {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .sound-status.custom {
+            color: var(--accent-gold);
+        }
+
+        /* Help Modal */
+        .help-shortcuts {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .shortcut-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .shortcut-row:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-row .key {
+            background: #444;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .help-text {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .help-text p {
+            margin: 8px 0;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .help-text strong {
+            color: var(--accent-gold);
+        }
+
+        /* Templates Modal */
+        .template-section {
+            margin-bottom: 20px;
+        }
+
+        .template-section h3 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            color: #aaa;
+        }
+
+        .template-export-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-export, .btn-import {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-export {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #2980b9;
+        }
+
+        .btn-import {
+            background: #9b59b6;
+            color: white;
+            display: inline-block;
+        }
+
+        .btn-import:hover {
+            background: #8e44ad;
+        }
+
+        .template-save-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .template-save-row input {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .template-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .template-name {
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .template-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-load {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .btn-load:hover {
+            background: var(--light-green);
+        }
+
+        .btn-delete {
+            background: #c0392b;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #e74c3c;
+        }
+
+        .no-templates {
+            color: #888;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Player Controls */
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .player-control-group {
+            text-align: center;
+        }
+
+        .player-control-group label {
+            display: block;
+            margin-bottom: 12px;
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .number-input {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .num-btn {
+            width: 55px;
+            height: 55px;
+            font-size: 1.8rem;
+            background: var(--primary-green);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .num-btn:hover {
+            background: var(--light-green);
+            transform: scale(1.1);
+        }
+
+        .number-input span {
+            font-size: 2.5rem;
+            font-weight: 700;
+            min-width: 80px;
+        }
+
+        /* Break Indicator */
+        .timer-section.break-active {
+            background: linear-gradient(145deg, #fff3cd, #ffeaa7);
+        }
+
+        .timer-section.break-active .main-timer {
+            color: #856404;
+        }
+
+        .timer-section.break-active .blinds-value {
+            color: #856404;
+        }
+
+        .timer-section.break-active .level-value {
+            color: #856404;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .timer-warning .main-timer {
+            animation: pulse 1s infinite;
+            color: #c0392b !important;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Responsive - for different screen heights */
+        /* HD 720p (height ~720px) */
+        @media (max-height: 800px) {
+            .main-timer {
+                font-size: 18vh;
+            }
+
+            .blinds-value {
+                font-size: 5vh;
+            }
+
+            .next-blinds {
+                font-size: 2.5vh;
+            }
+
+            .timer-section {
+                padding: 6px 20px;
+            }
+
+            .stats-column {
+                padding: 10px 15px;
+            }
+
+            .stats-column h3 {
+                font-size: 0.7rem;
+                margin-bottom: 6px;
+                padding-bottom: 4px;
+            }
+
+            .stat-label {
+                font-size: 0.8rem;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .quick-controls {
+                gap: 10px;
+            }
+
+            .quick-control-group {
+                padding: 4px 8px;
+                gap: 5px;
+            }
+
+            .quick-control-group .qc-label {
+                font-size: 0.65rem;
+                min-width: 50px;
+            }
+
+            .quick-control-group .qc-value {
+                font-size: 0.9rem;
+            }
+
+            .quick-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 0.9rem;
+            }
+
+            .info-box {
+                padding: 5px 10px;
+                min-width: 80px;
+            }
+
+            .info-box .label {
+                font-size: 0.55rem;
+            }
+
+            .info-box .value {
+                font-size: 0.9rem;
+            }
+
+            .header {
+                padding: 3px 15px;
+            }
+
+            .logo {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Very small height - HD 720p */
+        @media (max-height: 720px) {
+            .main-timer {
+                font-size: 15vh;
+            }
+
+            .blinds-value {
+                font-size: 4vh;
+            }
+
+            .next-blinds {
+                font-size: 2vh;
+            }
+
+            .app-container {
+                padding: 2px 8px;
+            }
+
+            .main-content {
+                padding: 4px 12px;
+                gap: 4px;
+            }
+
+            .timer-section {
+                padding: 4px 15px;
+            }
+
+            .info-bar {
+                gap: 5px;
+            }
+
+            .info-box {
+                padding: 4px 8px;
+                min-width: 70px;
+            }
+
+            .info-box .label {
+                font-size: 0.5rem;
+            }
+
+            .info-box .value {
+                font-size: 0.8rem;
+            }
+
+            .quick-controls {
+                gap: 8px;
+            }
+
+            .quick-control-group {
+                padding: 3px 6px;
+                gap: 4px;
+            }
+
+            .quick-control-group .qc-label {
+                font-size: 0.6rem;
+                min-width: 45px;
+            }
+
+            .quick-control-group .qc-value {
+                font-size: 0.8rem;
+                min-width: 25px;
+            }
+
+            .quick-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 0.85rem;
+            }
+
+            .stats-column {
+                padding: 8px 12px;
+            }
+
+            .stats-column h3 {
+                font-size: 0.65rem;
+                margin-bottom: 4px;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            .stat-value {
+                font-size: 0.9rem;
+            }
+
+            .header {
+                padding: 2px 10px;
+            }
+
+            .logo {
+                font-size: 1rem;
+            }
+
+            .control-bar {
+                padding: 3px 10px;
+            }
+
+            .control-btn {
+                padding: 4px 8px;
+            }
+
+            .btn-icon {
+                font-size: 1rem;
+            }
+
+            .btn-label {
+                font-size: 0.5rem;
+            }
+        }
+
+        /* Responsive - for different screen widths */
+        @media (max-width: 1200px) {
+            .main-timer {
+                font-size: 22vh;
+            }
+
+            .blinds-value {
+                font-size: 7vh;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-timer {
+                font-size: 18vh;
+            }
+
+            .blinds-value {
+                font-size: 6vh;
+            }
+
+            .timer-section {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">PokerTimer <span style="font-size: 0.5em; font-weight: 400;">by davidkosar.cz</span></h1>
+            <div class="header-info">
+                <div class="tournament-name" id="tournamentName">T2000 15min re-buy</div>
+                <div class="chip-count" id="chipDisplay">00000</div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Timer Section - Full Width -->
+            <div class="timer-section">
+                <!-- Timer row -->
+                <div class="timer-top-row">
+                    <div class="timer-left">
+                        <div class="level-display">
+                            <div class="level-label">Level</div>
+                            <div class="level-value" id="currentLevel">1</div>
+                        </div>
+                    </div>
+
+                    <div class="timer-center">
+                        <div class="main-timer" id="mainTimer">00:15:00</div>
+                    </div>
+
+                    <div class="timer-progress">
+                        <svg class="progress-ring" width="120" height="120">
+                            <circle class="progress-ring-bg" cx="60" cy="60" r="54"/>
+                            <circle class="progress-ring-fill" id="progressRing" cx="60" cy="60" r="54"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Blinds row - below timer -->
+                <div class="blinds-row">
+                    <div class="blinds-display">
+                        <div class="blinds-label">Blindy</div>
+                        <div class="blinds-value" id="currentBlinds">25/50</div>
+                        <div class="ante-row">
+                            <span class="ante-label">Ante:</span>
+                            <span class="ante-value" id="currentAnte">-</span>
+                        </div>
+                    </div>
+
+                    <div class="next-level-box">
+                        <div class="next-level-label">Další level</div>
+                        <div class="next-blinds" id="nextBlinds">50/100</div>
+                        <div class="next-ante">Ante: <span id="nextAnte">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Bar with Quick Controls -->
+            <div class="info-bar">
+                <div class="info-box">
+                    <span class="label">Čas do přestávky</span>
+                    <span class="value" id="timeToBreak">--:--</span>
+                </div>
+                <div class="info-box">
+                    <span class="label">Celkový čas</span>
+                    <span class="value" id="totalTime">00:00</span>
+                </div>
+                <div class="quick-control-group">
+                    <span class="qc-label">Počet vstupů</span>
+                    <div class="qc-controls">
+                        <button class="quick-btn minus" id="qcPlayersDown">−</button>
+                        <span class="qc-value" id="qcPlayersValue">0</span>
+                        <button class="quick-btn plus" id="qcPlayersUp">+</button>
+                    </div>
+                </div>
+                <div class="quick-control-group">
+                    <span class="qc-label">Počet hráčů</span>
+                    <div class="qc-controls">
+                        <button class="quick-btn minus" id="qcRemainingDown">−</button>
+                        <span class="qc-value" id="qcRemainingValue">0</span>
+                        <button class="quick-btn plus" id="qcRemainingUp">+</button>
+                    </div>
+                </div>
+                <div class="quick-control-group">
+                    <span class="qc-label">Re-buy</span>
+                    <div class="qc-controls">
+                        <button class="quick-btn minus" id="qcRebuyDown">−</button>
+                        <span class="qc-value" id="qcRebuyValue">0</span>
+                        <button class="quick-btn plus" id="qcRebuyUp">+</button>
+                    </div>
+                </div>
+                <div class="quick-control-group">
+                    <span class="qc-label">Add-on</span>
+                    <div class="qc-controls">
+                        <button class="quick-btn minus" id="qcAddonDown">−</button>
+                        <span class="qc-value" id="qcAddonValue">0</span>
+                        <button class="quick-btn plus" id="qcAddonUp">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+                <div class="stats-column">
+                    <h3>STAV</h3>
+                    <div class="stats-rows">
+                        <div class="stat-row">
+                            <span class="stat-label">Hráči</span>
+                            <span class="stat-value"><span id="playersRemaining">0</span>/<span id="playersTotal">0</span></span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Re-buys</span>
+                            <span class="stat-value" id="rebuys">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Add-ony</span>
+                            <span class="stat-value" id="addons">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-column">
+                    <h3>STATISTIKY</h3>
+                    <div class="stats-rows">
+                        <div class="stat-row">
+                            <span class="stat-label">Prům. stack</span>
+                            <span class="stat-value" id="avgStack">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Celkem žetonů</span>
+                            <span class="stat-value" id="totalChips">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Celková výhra</span>
+                            <span class="stat-value"><span id="totalPrize">0</span> Kč</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-column prize-structure">
+                    <h3>VÝHERNÍ STRUKTURA</h3>
+                    <div class="stats-rows" id="prizeDisplay">
+                        <!-- Prize rows will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <button class="control-btn" id="btnSettings" title="Nastavení turnaje">
+                <span class="btn-icon">&#9881;</span>
+                <span class="btn-label">TURNAJ</span>
+            </button>
+            <button class="control-btn" id="btnBlinds" title="Nastavení levelů">
+                <span class="btn-icon">&#127183;</span>
+                <span class="btn-label">LEVELY</span>
+            </button>
+            <button class="control-btn" id="btnSounds" title="Nastavení zvuků">
+                <span class="btn-icon">&#128266;</span>
+                <span class="btn-label">ZVUKY</span>
+            </button>
+            <button class="control-btn" id="btnPrizes" title="Výhry">
+                <span class="btn-icon">&#127942;</span>
+                <span class="btn-label">VÝHRY</span>
+            </button>
+            <button class="control-btn" id="btnPrevLevel" title="Předchozí level">
+                <span class="btn-icon">&#9198;</span>
+                <span class="btn-label">PŘEDCH.</span>
+            </button>
+            <button class="control-btn" id="btnTimeMinus" title="Odebrat 5 sekund">
+                <span class="btn-icon">−</span>
+                <span class="btn-label">-5s</span>
+            </button>
+            <button class="control-btn primary" id="btnPlayPause" title="Spustit/Pozastavit">
+                <span class="btn-icon" id="playPauseIcon">&#9654;</span>
+                <span class="btn-label">START</span>
+            </button>
+            <button class="control-btn" id="btnTimePlus" title="Přidat 5 sekund">
+                <span class="btn-icon">+</span>
+                <span class="btn-label">+5s</span>
+            </button>
+            <button class="control-btn" id="btnNextLevel" title="Další level">
+                <span class="btn-icon">&#9197;</span>
+                <span class="btn-label">DALŠÍ</span>
+            </button>
+            <button class="control-btn" id="btnTemplates" title="Šablony turnajů">
+                <span class="btn-icon">&#128190;</span>
+                <span class="btn-label">ŠABLONY</span>
+            </button>
+            <button class="control-btn" id="btnHelp" title="Nápověda">
+                <span class="btn-icon">?</span>
+                <span class="btn-label">NÁPOVĚDA</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Nastavení turnaje</h2>
+                <button class="close-btn" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Název turnaje</label>
+                        <input type="text" id="inputTournamentName" value="T2000 15min re-buy">
+                    </div>
+                    <div class="form-group">
+                        <label>Počáteční žetony</label>
+                        <input type="number" id="inputStartingChips" value="2000">
+                    </div>
+                    <div class="form-group">
+                        <label>Buy-in (Kč)</label>
+                        <input type="number" id="inputBuyin" value="200">
+                    </div>
+                    <div class="form-group">
+                        <label>Re-buy žetony</label>
+                        <input type="number" id="inputRebuyChips" value="2000">
+                    </div>
+                    <div class="form-group">
+                        <label>Re-buy cena (Kč)</label>
+                        <input type="number" id="inputRebuyCost" value="200">
+                    </div>
+                    <div class="form-group">
+                        <label>Add-on žetony</label>
+                        <input type="number" id="inputAddonChips" value="4000">
+                    </div>
+                    <div class="form-group">
+                        <label>Add-on cena (Kč)</label>
+                        <input type="number" id="inputAddonCost" value="200">
+                    </div>
+                    <div class="form-group">
+                        <label>Výchozí délka levelu (min)</label>
+                        <input type="number" id="inputLevelDuration" value="15">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" id="btnSaveSettings">Uložit nastavení</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blinds Modal -->
+    <div class="modal" id="blindsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Struktura blindů</h2>
+                <button class="close-btn" id="closeBlinds">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="blind-structure-header">
+                    <span>Level</span>
+                    <span>Small Blind</span>
+                    <span>Big Blind</span>
+                    <span>Ante</span>
+                    <span>Čas (min)</span>
+                    <span></span>
+                </div>
+                <div class="blind-structure" id="blindStructure">
+                    <!-- Blind levels and breaks will be populated here -->
+                </div>
+                <div class="add-buttons">
+                    <button class="btn-add-level" id="btnAddLevel">+ Přidat level</button>
+                    <button class="btn-add-break" id="btnAddBreak">+ Přidat přestávku</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" id="btnSaveBlinds">Uložit blindy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sounds Modal -->
+    <div class="modal" id="soundsModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Nastavení zvuků</h2>
+                <button class="close-btn" id="closeSounds">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sound-settings">
+                    <div class="sound-group">
+                        <label>Zvuk konce levelu</label>
+                        <div class="sound-controls">
+                            <input type="file" id="soundLevelEnd" accept="audio/*" class="sound-input">
+                            <button type="button" class="btn-test-sound" data-sound="levelEnd">Test</button>
+                            <button type="button" class="btn-clear-sound" data-sound="levelEnd">Smazat</button>
+                        </div>
+                        <span class="sound-status" id="statusLevelEnd">Výchozí zvuk</span>
+                    </div>
+                    <div class="sound-group">
+                        <label>Zvuk přestávky</label>
+                        <div class="sound-controls">
+                            <input type="file" id="soundBreak" accept="audio/*" class="sound-input">
+                            <button type="button" class="btn-test-sound" data-sound="break">Test</button>
+                            <button type="button" class="btn-clear-sound" data-sound="break">Smazat</button>
+                        </div>
+                        <span class="sound-status" id="statusBreak">Výchozí zvuk</span>
+                    </div>
+                    <div class="sound-group">
+                        <label>Varovný zvuk (1 minuta)</label>
+                        <div class="sound-controls">
+                            <input type="file" id="soundWarning" accept="audio/*" class="sound-input">
+                            <button type="button" class="btn-test-sound" data-sound="warning">Test</button>
+                            <button type="button" class="btn-clear-sound" data-sound="warning">Smazat</button>
+                        </div>
+                        <span class="sound-status" id="statusWarning">Výchozí zvuk</span>
+                    </div>
+                    <div class="sound-group">
+                        <label>Odpočet (posledních 10 s)</label>
+                        <div class="sound-controls">
+                            <input type="file" id="soundCountdown" accept="audio/*" class="sound-input">
+                            <button type="button" class="btn-test-sound" data-sound="countdown">Test</button>
+                            <button type="button" class="btn-clear-sound" data-sound="countdown">Smazat</button>
+                        </div>
+                        <span class="sound-status" id="statusCountdown">Výchozí zvuk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Players Modal -->
+    <div class="modal" id="playersModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Hráči</h2>
+                <button class="close-btn" id="closePlayers">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="player-controls">
+                    <div class="player-control-group">
+                        <label>Celkem hráčů</label>
+                        <div class="number-input">
+                            <button class="num-btn" id="btnPlayersDown">-</button>
+                            <span id="playerCountDisplay">0</span>
+                            <button class="num-btn" id="btnPlayersUp">+</button>
+                        </div>
+                    </div>
+                    <div class="player-control-group">
+                        <label>Zbývá hráčů</label>
+                        <div class="number-input">
+                            <button class="num-btn" id="btnRemainingDown">-</button>
+                            <span id="remainingCountDisplay">0</span>
+                            <button class="num-btn" id="btnRemainingUp">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prizes Modal -->
+    <div class="modal" id="prizesModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Výherní struktura</h2>
+                <button class="close-btn" id="closePrizes">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Typ rozdělení výher</label>
+                    <select id="prizeType">
+                        <option value="percent">Procenta z prize poolu</option>
+                        <option value="fixed">Pevné částky (Kč)</option>
+                    </select>
+                </div>
+                <div class="prize-structure-header">
+                    <span>Místo</span>
+                    <span id="prizeTypeLabel">Procenta (%)</span>
+                    <span></span>
+                </div>
+                <div class="prize-structure-list" id="prizeStructureList">
+                    <!-- Prize places will be populated here -->
+                </div>
+                <div class="add-buttons" style="margin-bottom: 15px;">
+                    <button class="btn-add-level" id="btnAddPrize" style="width: 100%;">+ Přidat místo</button>
+                </div>
+                <div class="prize-summary" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="color: #aaa;">Celkový prize pool:</span>
+                        <span style="color: var(--accent-gold); font-weight: bold;" id="prizeSummaryTotal">0 Kč</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #aaa;">Součet rozdělení:</span>
+                        <span id="prizeSummarySum" style="font-weight: bold;">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" id="btnSavePrizes">Uložit výhry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Modal -->
+    <div class="modal" id="templatesModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Šablony turnajů</h2>
+                <button class="close-btn" id="closeTemplates">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="template-section">
+                    <h3>Export jako HTML</h3>
+                    <div class="template-export-row">
+                        <button class="btn-export" id="btnExportTemplate">Stáhnout jako HTML soubor</button>
+                    </div>
+                    <p style="font-size: 12px; color: #aaa; margin-top: 8px;">Stažený HTML soubor lze otevřít přímo v prohlížeči s uloženým nastavením.</p>
+                </div>
+                <div class="template-section">
+                    <h3>Uložit do prohlížeče</h3>
+                    <div class="template-save-row">
+                        <input type="text" id="templateName" placeholder="Název šablony">
+                        <button class="btn-save" id="btnSaveTemplate">Uložit</button>
+                    </div>
+                </div>
+                <div class="template-section">
+                    <h3>Uložené šablony (lokální)</h3>
+                    <div class="template-list" id="templateList">
+                        <!-- Templates will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Nápověda</h2>
+                <button class="close-btn" id="closeHelp">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>Klávesové zkratky</h3>
+                <div class="help-shortcuts">
+                    <div class="shortcut-row"><span class="key">Mezerník</span> Start / Pauza</div>
+                    <div class="shortcut-row"><span class="key">V</span> +1 Vstup (hráč)</div>
+                    <div class="shortcut-row"><span class="key">H</span> -1 Hráč (vypadnutí)</div>
+                    <div class="shortcut-row"><span class="key">R</span> +1 Re-buy</div>
+                    <div class="shortcut-row"><span class="key">A</span> +1 Add-on</div>
+                    <div class="shortcut-row"><span class="key">Shift+Del</span> Vymazat počítadla</div>
+                </div>
+                <h3>Ovládání</h3>
+                <div class="help-text">
+                    <p><strong>TURNAJ</strong> - Základní nastavení turnaje (buy-in, žetony, ceny)</p>
+                    <p><strong>LEVELY</strong> - Struktura blindů a přestávek</p>
+                    <p><strong>ZVUKY</strong> - Vlastní zvuková upozornění</p>
+                    <p><strong>VÝHRY</strong> - Nastavení výherní struktury</p>
+                    <p><strong>ŠABLONY</strong> - Uložení/načtení předpřipravených turnajů</p>
+                    <p><strong>-5s / +5s</strong> - Úprava času (pouze při pauze)</p>
+                </div>
+                <h3>Quick Controls</h3>
+                <div class="help-text">
+                    <p>Panel pod časovačem umožňuje rychlou úpravu počtu vstupů, hráčů, re-buy a add-on přímo během turnaje.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pokerový Turnajový Časovač - Hlavní Aplikace
+        class PokerTimer {
+            constructor() {
+                // Initialize audio context for better sound
+                this.audioContext = null;
+
+                // Custom sounds storage
+                this.customSounds = {
+                    levelEnd: null,
+                    break: null,
+                    warning: null,
+                    countdown: null
+                };
+
+                // Audio elements for custom sounds
+                this.audioElements = {
+                    levelEnd: new Audio(),
+                    break: new Audio(),
+                    warning: new Audio(),
+                    countdown: new Audio()
+                };
+
+                // Default blind structure with breaks included
+                this.defaultBlinds = [
+                    { small: 25, big: 50, ante: 0, duration: 15, isBreak: false },
+                    { small: 50, big: 100, ante: 0, duration: 15, isBreak: false },
+                    { small: 75, big: 150, ante: 0, duration: 15, isBreak: false },
+                    { small: 100, big: 200, ante: 0, duration: 15, isBreak: false },
+                    { duration: 10, isBreak: true }, // Přestávka
+                    { small: 150, big: 300, ante: 25, duration: 15, isBreak: false },
+                    { small: 200, big: 400, ante: 50, duration: 15, isBreak: false },
+                    { small: 300, big: 600, ante: 75, duration: 15, isBreak: false },
+                    { small: 400, big: 800, ante: 100, duration: 15, isBreak: false },
+                    { duration: 10, isBreak: true }, // Přestávka
+                    { small: 500, big: 1000, ante: 100, duration: 15, isBreak: false },
+                    { small: 600, big: 1200, ante: 200, duration: 15, isBreak: false },
+                    { small: 800, big: 1600, ante: 200, duration: 15, isBreak: false },
+                    { small: 1000, big: 2000, ante: 300, duration: 15, isBreak: false },
+                    { duration: 10, isBreak: true }, // Přestávka
+                    { small: 1500, big: 3000, ante: 400, duration: 15, isBreak: false },
+                    { small: 2000, big: 4000, ante: 500, duration: 15, isBreak: false },
+                    { small: 3000, big: 6000, ante: 1000, duration: 15, isBreak: false },
+                ];
+
+                // Default prize structure
+                this.defaultPrizes = [
+                    { place: 1, value: 50 },
+                    { place: 2, value: 30 },
+                    { place: 3, value: 20 }
+                ];
+
+                // Tournament settings
+                this.settings = {
+                    tournamentName: 'T2000 15min re-buy',
+                    startingChips: 2000,
+                    buyin: 200,
+                    rebuyChips: 2000,
+                    rebuyCost: 200,
+                    addonChips: 4000,
+                    addonCost: 200,
+                    levelDuration: 15,
+                    blinds: [...this.defaultBlinds],
+                    prizeType: 'percent', // 'percent' or 'fixed'
+                    prizes: [...this.defaultPrizes]
+                };
+
+                // Tournament state
+                const firstLevel = this.settings.blinds[0];
+                this.state = {
+                    currentIndex: 0, // Index in blinds array (includes breaks)
+                    timeRemaining: (firstLevel?.duration || this.settings.levelDuration) * 60,
+                    totalTimeElapsed: 0,
+                    isRunning: false,
+                    playersTotal: 0,
+                    playersRemaining: 0,
+                    rebuys: 0,
+                    addons: 0
+                };
+
+                this.timerInterval = null;
+
+                this.init();
+            }
+
+            init() {
+                this.loadFromStorage();
+                this.loadSoundsFromStorage();
+                this.bindEvents();
+                this.renderBlindStructure();
+                this.updateDisplay();
+                this.updateQuickControls();
+            }
+
+            initAudio() {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            bindEvents() {
+                // Control buttons
+                document.getElementById('btnPlayPause').addEventListener('click', () => this.toggleTimer());
+                document.getElementById('btnPrevLevel').addEventListener('click', () => this.prevLevel());
+                document.getElementById('btnNextLevel').addEventListener('click', () => this.nextLevel());
+                document.getElementById('btnTimePlus').addEventListener('click', () => this.adjustTime(5));
+                document.getElementById('btnTimeMinus').addEventListener('click', () => this.adjustTime(-5));
+
+                // Modal buttons
+                document.getElementById('btnSettings').addEventListener('click', () => this.openSettings());
+                document.getElementById('closeSettings').addEventListener('click', () => this.closeSettings());
+                document.getElementById('btnSaveSettings').addEventListener('click', () => this.saveSettings());
+
+                // Blinds modal
+                document.getElementById('btnBlinds').addEventListener('click', () => this.openBlinds());
+                document.getElementById('closeBlinds').addEventListener('click', () => this.closeBlinds());
+                document.getElementById('btnSaveBlinds').addEventListener('click', () => this.saveBlinds());
+                document.getElementById('btnAddLevel').addEventListener('click', () => this.addBlindLevel());
+                document.getElementById('btnAddBreak').addEventListener('click', () => this.addBreak());
+
+                // Sounds modal
+                document.getElementById('btnSounds').addEventListener('click', () => this.openSounds());
+                document.getElementById('closeSounds').addEventListener('click', () => this.closeSounds());
+
+                // Prize modal
+                document.getElementById('btnPrizes').addEventListener('click', () => this.openPrizes());
+                document.getElementById('closePrizes').addEventListener('click', () => this.closePrizes());
+                document.getElementById('btnSavePrizes').addEventListener('click', () => this.savePrizes());
+                document.getElementById('btnAddPrize').addEventListener('click', () => this.addPrizePlace());
+                document.getElementById('prizeType').addEventListener('change', (e) => this.updatePrizeType(e.target.value));
+
+                // Templates modal
+                document.getElementById('btnTemplates').addEventListener('click', () => this.openTemplates());
+                document.getElementById('closeTemplates').addEventListener('click', () => this.closeTemplates());
+                document.getElementById('btnSaveTemplate').addEventListener('click', () => this.saveTemplate());
+                document.getElementById('btnExportTemplate').addEventListener('click', () => this.exportTemplate());
+
+                // Help modal
+                document.getElementById('btnHelp').addEventListener('click', () => this.openHelp());
+                document.getElementById('closeHelp').addEventListener('click', () => this.closeHelp());
+
+                // Player controls (in modal)
+                document.getElementById('btnPlayersUp').addEventListener('click', () => this.adjustPlayers(1, 'total'));
+                document.getElementById('btnPlayersDown').addEventListener('click', () => this.adjustPlayers(-1, 'total'));
+                document.getElementById('btnRemainingUp').addEventListener('click', () => this.adjustPlayers(1, 'remaining'));
+                document.getElementById('btnRemainingDown').addEventListener('click', () => this.adjustPlayers(-1, 'remaining'));
+
+                // Quick controls (on main screen)
+                document.getElementById('qcPlayersUp').addEventListener('click', () => this.quickAdjustPlayers(1));
+                document.getElementById('qcPlayersDown').addEventListener('click', () => this.quickAdjustPlayers(-1));
+                document.getElementById('qcRemainingUp').addEventListener('click', () => this.quickAdjustRemaining(1));
+                document.getElementById('qcRemainingDown').addEventListener('click', () => this.quickAdjustRemaining(-1));
+                document.getElementById('qcRebuyUp').addEventListener('click', () => this.quickAdjustRebuy(1));
+                document.getElementById('qcRebuyDown').addEventListener('click', () => this.quickAdjustRebuy(-1));
+                document.getElementById('qcAddonUp').addEventListener('click', () => this.quickAdjustAddon(1));
+                document.getElementById('qcAddonDown').addEventListener('click', () => this.quickAdjustAddon(-1));
+
+                // Close modal on outside click
+                document.getElementById('settingsModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'settingsModal') this.closeSettings();
+                });
+                document.getElementById('blindsModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'blindsModal') this.closeBlinds();
+                });
+                document.getElementById('soundsModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'soundsModal') this.closeSounds();
+                });
+                document.getElementById('playersModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'playersModal') this.closePlayers();
+                });
+                document.getElementById('prizesModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'prizesModal') this.closePrizes();
+                });
+                document.getElementById('templatesModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'templatesModal') this.closeTemplates();
+                });
+                document.getElementById('helpModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'helpModal') this.closeHelp();
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.tagName === 'INPUT') return;
+
+                    switch(e.code) {
+                        case 'Space':
+                            e.preventDefault();
+                            this.toggleTimer();
+                            break;
+                        case 'KeyR':
+                            this.quickAdjustRebuy(1);
+                            break;
+                        case 'KeyA':
+                            this.quickAdjustAddon(1);
+                            break;
+                        case 'KeyV':
+                            this.quickAdjustPlayers(1);
+                            break;
+                        case 'KeyH':
+                            this.quickAdjustRemaining(-1);
+                            break;
+                        case 'Delete':
+                            if (e.shiftKey) {
+                                e.preventDefault();
+                                this.resetCounters();
+                            }
+                            break;
+                    }
+                });
+
+                // Init audio on first interaction
+                document.addEventListener('click', () => this.initAudio(), { once: true });
+
+                // Sound file inputs
+                document.getElementById('soundLevelEnd').addEventListener('change', (e) => this.loadCustomSound(e, 'levelEnd'));
+                document.getElementById('soundBreak').addEventListener('change', (e) => this.loadCustomSound(e, 'break'));
+                document.getElementById('soundWarning').addEventListener('change', (e) => this.loadCustomSound(e, 'warning'));
+                document.getElementById('soundCountdown').addEventListener('change', (e) => this.loadCustomSound(e, 'countdown'));
+
+                // Test sound buttons
+                document.querySelectorAll('.btn-test-sound').forEach(btn => {
+                    btn.addEventListener('click', () => this.testSound(btn.dataset.sound));
+                });
+
+                // Clear sound buttons
+                document.querySelectorAll('.btn-clear-sound').forEach(btn => {
+                    btn.addEventListener('click', () => this.clearCustomSound(btn.dataset.sound));
+                });
+            }
+
+            toggleTimer() {
+                if (this.state.isRunning) {
+                    this.pauseTimer();
+                } else {
+                    this.startTimer();
+                }
+            }
+
+            startTimer() {
+                this.initAudio();
+                this.state.isRunning = true;
+                this.updatePlayPauseButton();
+
+                this.timerInterval = setInterval(() => {
+                    if (this.state.timeRemaining > 0) {
+                        this.state.timeRemaining--;
+                        this.state.totalTimeElapsed++;
+                        this.updateDisplay();
+                        this.saveToStorage();
+
+                        // Warning at 60 seconds
+                        if (this.state.timeRemaining === 60) {
+                            document.querySelector('.timer-section').classList.add('timer-warning');
+                            this.playWarningSound();
+                        }
+
+                        // Countdown beeps at 10 seconds
+                        if (this.state.timeRemaining <= 10 && this.state.timeRemaining > 0) {
+                            this.playCountdownBeep();
+                        }
+                    } else {
+                        this.levelComplete();
+                    }
+                }, 1000);
+            }
+
+            pauseTimer() {
+                this.state.isRunning = false;
+                clearInterval(this.timerInterval);
+                this.updatePlayPauseButton();
+            }
+
+            resetLevel() {
+                this.pauseTimer();
+                const current = this.getCurrentData();
+                this.state.timeRemaining = (current?.duration || this.settings.levelDuration) * 60;
+                document.querySelector('.timer-section').classList.remove('timer-warning');
+                this.updateDisplay();
+                this.saveToStorage();
+            }
+
+            prevLevel() {
+                if (this.state.currentIndex > 0) {
+                    this.state.currentIndex--;
+                    this.updateBreakStatus();
+                    this.resetLevel();
+                }
+            }
+
+            nextLevel() {
+                if (this.state.currentIndex < this.settings.blinds.length - 1) {
+                    this.state.currentIndex++;
+                    this.updateBreakStatus();
+                    this.resetLevel();
+                }
+            }
+
+            adjustTime(seconds) {
+                const current = this.getCurrentData();
+                const maxTime = (current?.duration || this.settings.levelDuration) * 60;
+                let newTime = this.state.timeRemaining + seconds;
+
+                // Cap at maximum level duration
+                if (newTime > maxTime) {
+                    newTime = maxTime;
+                }
+
+                // Cap at minimum 0
+                if (newTime <= 0) {
+                    this.state.timeRemaining = 0;
+                    this.levelComplete();
+                } else {
+                    this.state.timeRemaining = newTime;
+                    document.getElementById('mainTimer').textContent = this.formatTime(this.state.timeRemaining);
+                    this.saveToStorage();
+                }
+            }
+
+            updateBreakStatus() {
+                const current = this.getCurrentData();
+                const timerSection = document.querySelector('.timer-section');
+                if (current && current.isBreak) {
+                    timerSection.classList.add('break-active');
+                } else {
+                    timerSection.classList.remove('break-active');
+                }
+            }
+
+            levelComplete() {
+                this.pauseTimer();
+                document.querySelector('.timer-section').classList.remove('timer-warning');
+
+                const current = this.getCurrentData();
+
+                // Play appropriate sound
+                if (current && current.isBreak) {
+                    // End of break - play level end sound
+                    this.playLevelEndSound();
+                } else {
+                    // Check if next is a break
+                    const next = this.getNextData();
+                    if (next && next.isBreak) {
+                        this.playBreakSound();
+                    } else {
+                        this.playLevelEndSound();
+                    }
+                }
+
+                // Auto advance to next level after delay
+                setTimeout(() => {
+                    this.nextLevel();
+                    // Auto-start the next level
+                    this.startTimer();
+                }, 3000);
+            }
+
+            getCurrentData() {
+                if (this.state.currentIndex < this.settings.blinds.length) {
+                    return this.settings.blinds[this.state.currentIndex];
+                }
+                return this.settings.blinds[this.settings.blinds.length - 1];
+            }
+
+            getNextData() {
+                if (this.state.currentIndex + 1 < this.settings.blinds.length) {
+                    return this.settings.blinds[this.state.currentIndex + 1];
+                }
+                return null;
+            }
+
+            // Get next non-break level for display
+            getNextLevelData() {
+                for (let i = this.state.currentIndex + 1; i < this.settings.blinds.length; i++) {
+                    if (!this.settings.blinds[i].isBreak) {
+                        return this.settings.blinds[i];
+                    }
+                }
+                return null;
+            }
+
+            // Get current level number (excluding breaks)
+            getCurrentLevelNumber() {
+                let levelNum = 0;
+                for (let i = 0; i <= this.state.currentIndex && i < this.settings.blinds.length; i++) {
+                    if (!this.settings.blinds[i].isBreak) {
+                        levelNum++;
+                    }
+                }
+                return levelNum;
+            }
+
+            updateDisplay() {
+                const current = this.getCurrentData();
+                const isBreak = current && current.isBreak;
+                const nextLevel = this.getNextLevelData();
+
+                // Main timer
+                document.getElementById('mainTimer').textContent = this.formatTime(this.state.timeRemaining);
+
+                // Progress ring (radius 54, circumference = 2 * PI * 54 = ~339)
+                const totalTime = (current?.duration || this.settings.levelDuration) * 60;
+                const progress = (this.state.timeRemaining / totalTime);
+                const circumference = 2 * Math.PI * 54;
+                const offset = circumference * (1 - progress);
+                document.getElementById('progressRing').style.strokeDasharray = circumference;
+                document.getElementById('progressRing').style.strokeDashoffset = offset;
+
+                // Update break status styling
+                this.updateBreakStatus();
+
+                // Level info
+                if (isBreak) {
+                    document.getElementById('currentLevel').textContent = 'PAUZA';
+                    document.getElementById('currentBlinds').textContent = 'PŘESTÁVKA';
+                    document.getElementById('currentAnte').textContent = '-';
+                } else {
+                    document.getElementById('currentLevel').textContent = this.getCurrentLevelNumber();
+                    document.getElementById('currentBlinds').textContent = `${current.small}/${current.big}`;
+                    document.getElementById('currentAnte').textContent = current.ante > 0 ? current.ante : '-';
+                }
+
+                // Next level
+                if (nextLevel) {
+                    document.getElementById('nextBlinds').textContent = `${nextLevel.small}/${nextLevel.big}`;
+                    document.getElementById('nextAnte').textContent = nextLevel.ante > 0 ? nextLevel.ante : '-';
+                } else {
+                    document.getElementById('nextBlinds').textContent = '-';
+                    document.getElementById('nextAnte').textContent = '-';
+                }
+
+                // Total time
+                document.getElementById('totalTime').textContent = this.formatTime(this.state.totalTimeElapsed);
+
+                // Time to break
+                this.updateTimeToBreak();
+
+                // Tournament name
+                document.getElementById('tournamentName').textContent = this.settings.tournamentName;
+
+                // Statistics
+                this.updateStatistics();
+            }
+
+            updateTimeToBreak() {
+                // Find next break
+                let timeToBreak = this.state.timeRemaining;
+                let foundBreak = false;
+
+                const current = this.getCurrentData();
+                if (current && current.isBreak) {
+                    document.getElementById('timeToBreak').textContent = 'NYNÍ';
+                    return;
+                }
+
+                for (let i = this.state.currentIndex + 1; i < this.settings.blinds.length; i++) {
+                    if (this.settings.blinds[i].isBreak) {
+                        foundBreak = true;
+                        break;
+                    }
+                    timeToBreak += (this.settings.blinds[i].duration || this.settings.levelDuration) * 60;
+                }
+
+                if (foundBreak) {
+                    document.getElementById('timeToBreak').textContent = this.formatTime(timeToBreak);
+                } else {
+                    document.getElementById('timeToBreak').textContent = '--:--';
+                }
+            }
+
+            updateStatistics() {
+                const playersRemaining = this.state.playersRemaining;
+                const playersTotal = this.state.playersTotal;
+
+                document.getElementById('playersRemaining').textContent = playersRemaining;
+                document.getElementById('playersTotal').textContent = playersTotal;
+                document.getElementById('rebuys').textContent = this.state.rebuys;
+                document.getElementById('addons').textContent = this.state.addons;
+
+                // Calculate total chips
+                const totalChips = (playersTotal * this.settings.startingChips) +
+                                  (this.state.rebuys * this.settings.rebuyChips) +
+                                  (this.state.addons * this.settings.addonChips);
+                document.getElementById('totalChips').textContent = this.formatNumber(totalChips);
+
+                // Chip display in header
+                document.getElementById('chipDisplay').textContent = this.formatNumber(totalChips).padStart(5, '0');
+
+                // Average stack
+                const avgStack = playersRemaining > 0 ? Math.round(totalChips / playersRemaining) : 0;
+                document.getElementById('avgStack').textContent = this.formatNumber(avgStack);
+
+                // Total prize
+                const totalPrize = (playersTotal * this.settings.buyin) +
+                                  (this.state.rebuys * this.settings.rebuyCost) +
+                                  (this.state.addons * this.settings.addonCost);
+                document.getElementById('totalPrize').textContent = this.formatNumber(totalPrize);
+
+                // Prize structure - dynamic
+                this.updatePrizeDisplay(totalPrize);
+            }
+
+            updatePrizeDisplay(totalPrize) {
+                const container = document.getElementById('prizeDisplay');
+                container.innerHTML = '';
+
+                const prizes = this.settings.prizes || this.defaultPrizes;
+                const isPercent = this.settings.prizeType === 'percent';
+
+                prizes.forEach(prize => {
+                    const amount = isPercent
+                        ? Math.round(totalPrize * prize.value / 100)
+                        : prize.value;
+
+                    const row = document.createElement('div');
+                    row.className = 'stat-row';
+                    row.innerHTML = `
+                        <span class="stat-label">${prize.place}. místo</span>
+                        <span class="stat-value">${this.formatNumber(amount)} Kč</span>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            updatePlayPauseButton() {
+                const btn = document.getElementById('btnPlayPause');
+                const icon = document.getElementById('playPauseIcon');
+                const label = btn.querySelector('.btn-label');
+                const btnTimePlus = document.getElementById('btnTimePlus');
+                const btnTimeMinus = document.getElementById('btnTimeMinus');
+
+                if (this.state.isRunning) {
+                    icon.innerHTML = '&#9208;';
+                    label.textContent = 'PAUZA';
+                    btnTimePlus.disabled = true;
+                    btnTimeMinus.disabled = true;
+                } else {
+                    icon.innerHTML = '&#9654;';
+                    label.textContent = 'START';
+                    btnTimePlus.disabled = false;
+                    btnTimeMinus.disabled = false;
+                }
+            }
+
+            formatTime(seconds) {
+                const hrs = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+
+                if (hrs > 0) {
+                    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+                return `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            formatNumber(num) {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            }
+
+            // Sound functions
+            loadCustomSound(event, soundType) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.customSounds[soundType] = e.target.result;
+                        this.audioElements[soundType].src = e.target.result;
+                        this.updateSoundStatus(soundType, file.name);
+                        this.saveSoundsToStorage();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            clearCustomSound(soundType) {
+                this.customSounds[soundType] = null;
+                this.audioElements[soundType].src = '';
+                this.updateSoundStatus(soundType, null);
+                this.saveSoundsToStorage();
+
+                // Clear file input
+                const inputId = 'sound' + soundType.charAt(0).toUpperCase() + soundType.slice(1);
+                const input = document.getElementById(inputId);
+                if (input) input.value = '';
+            }
+
+            updateSoundStatus(soundType, filename) {
+                const statusId = 'status' + soundType.charAt(0).toUpperCase() + soundType.slice(1);
+                const statusEl = document.getElementById(statusId);
+                if (statusEl) {
+                    if (filename) {
+                        statusEl.textContent = 'Vlastní: ' + filename;
+                        statusEl.classList.add('custom');
+                    } else {
+                        statusEl.textContent = 'Výchozí zvuk';
+                        statusEl.classList.remove('custom');
+                    }
+                }
+            }
+
+            testSound(soundType) {
+                switch(soundType) {
+                    case 'levelEnd':
+                        this.playLevelEndSound();
+                        break;
+                    case 'break':
+                        this.playBreakSound();
+                        break;
+                    case 'warning':
+                        this.playWarningSound();
+                        break;
+                    case 'countdown':
+                        this.playCountdownBeep();
+                        break;
+                }
+            }
+
+            playCustomSound(soundType) {
+                if (this.customSounds[soundType] && this.audioElements[soundType].src) {
+                    this.audioElements[soundType].currentTime = 0;
+                    this.audioElements[soundType].play().catch(() => {});
+                    return true;
+                }
+                return false;
+            }
+
+            playBeep(frequency, duration) {
+                if (!this.audioContext) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+
+            playCountdownBeep() {
+                // Try custom sound first
+                if (this.playCustomSound('countdown')) return;
+
+                // Default beep
+                this.playBeep(800, 0.1);
+            }
+
+            playWarningSound() {
+                // Try custom sound first
+                if (this.playCustomSound('warning')) return;
+
+                // Default: Two quick beeps for 1 minute warning
+                this.playBeep(600, 0.2);
+                setTimeout(() => this.playBeep(600, 0.2), 250);
+            }
+
+            playLevelEndSound() {
+                // Try custom sound first
+                if (this.playCustomSound('levelEnd')) return;
+
+                if (!this.audioContext) return;
+
+                // Default: Play a loud, attention-grabbing alarm sequence
+                const playTone = (freq, start, dur) => {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.audioContext.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'square';
+                    gain.gain.setValueAtTime(0.4, this.audioContext.currentTime + start);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + start + dur);
+                    osc.start(this.audioContext.currentTime + start);
+                    osc.stop(this.audioContext.currentTime + start + dur);
+                };
+
+                // Alarm pattern: alternating high-low tones
+                playTone(880, 0, 0.15);
+                playTone(660, 0.2, 0.15);
+                playTone(880, 0.4, 0.15);
+                playTone(660, 0.6, 0.15);
+                playTone(880, 0.8, 0.15);
+                playTone(660, 1.0, 0.15);
+                playTone(1100, 1.2, 0.4);
+            }
+
+            playBreakSound() {
+                // Try custom sound first
+                if (this.playCustomSound('break')) return;
+
+                if (!this.audioContext) return;
+
+                // Default: Pleasant chime for break
+                const playChime = (freq, start, dur) => {
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.audioContext.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.3, this.audioContext.currentTime + start);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + start + dur);
+                    osc.start(this.audioContext.currentTime + start);
+                    osc.stop(this.audioContext.currentTime + start + dur);
+                };
+
+                // Ascending chime for break
+                playChime(523, 0, 0.3);    // C
+                playChime(659, 0.15, 0.3); // E
+                playChime(784, 0.3, 0.3);  // G
+                playChime(1047, 0.45, 0.5); // High C
+            }
+
+            saveSoundsToStorage() {
+                try {
+                    localStorage.setItem('pokerTimerSounds', JSON.stringify(this.customSounds));
+                } catch (e) {
+                    console.log('Nelze uložit zvuky - úložiště může být plné');
+                }
+            }
+
+            loadSoundsFromStorage() {
+                try {
+                    const sounds = JSON.parse(localStorage.getItem('pokerTimerSounds'));
+                    if (sounds) {
+                        Object.keys(sounds).forEach(key => {
+                            if (sounds[key]) {
+                                this.customSounds[key] = sounds[key];
+                                this.audioElements[key].src = sounds[key];
+                                this.updateSoundStatus(key, 'Uložený zvuk');
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.log('Nelze načíst vlastní zvuky');
+                }
+            }
+
+            // Player management
+            adjustPlayers(delta, type) {
+                if (type === 'total') {
+                    this.state.playersTotal = Math.max(0, this.state.playersTotal + delta);
+                    if (delta > 0 && this.state.playersRemaining < this.state.playersTotal) {
+                        this.state.playersRemaining += delta;
+                    }
+                    this.state.playersRemaining = Math.min(this.state.playersRemaining, this.state.playersTotal);
+                } else {
+                    this.state.playersRemaining = Math.max(0, Math.min(this.state.playersTotal, this.state.playersRemaining + delta));
+                }
+
+                document.getElementById('playerCountDisplay').textContent = this.state.playersTotal;
+                document.getElementById('remainingCountDisplay').textContent = this.state.playersRemaining;
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            // Quick controls methods (main screen)
+            quickAdjustPlayers(delta) {
+                this.state.playersTotal = Math.max(0, this.state.playersTotal + delta);
+                if (delta > 0) {
+                    this.state.playersRemaining = Math.max(this.state.playersRemaining, this.state.playersRemaining + delta);
+                }
+                this.state.playersRemaining = Math.min(this.state.playersRemaining, this.state.playersTotal);
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            quickAdjustRemaining(delta) {
+                // Directly adjust remaining players count
+                // Plus adds player, minus removes player
+                this.state.playersRemaining = Math.max(0, Math.min(this.state.playersTotal, this.state.playersRemaining + delta));
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            quickAdjustRebuy(delta) {
+                this.state.rebuys = Math.max(0, this.state.rebuys + delta);
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            quickAdjustAddon(delta) {
+                this.state.addons = Math.max(0, this.state.addons + delta);
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            resetCounters() {
+                this.state.playersTotal = 0;
+                this.state.playersRemaining = 0;
+                this.state.rebuys = 0;
+                this.state.addons = 0;
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            updateQuickControls() {
+                document.getElementById('qcPlayersValue').textContent = this.state.playersTotal;
+                document.getElementById('qcRemainingValue').textContent = this.state.playersRemaining;
+                document.getElementById('qcRebuyValue').textContent = this.state.rebuys;
+                document.getElementById('qcAddonValue').textContent = this.state.addons;
+            }
+
+            addRebuy() {
+                this.state.rebuys++;
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            addAddon() {
+                this.state.addons++;
+                this.updateDisplay();
+                this.updateQuickControls();
+                this.saveToStorage();
+            }
+
+            // Settings modal
+            openSettings() {
+                document.getElementById('settingsModal').classList.add('active');
+
+                // Populate form
+                document.getElementById('inputTournamentName').value = this.settings.tournamentName;
+                document.getElementById('inputStartingChips').value = this.settings.startingChips;
+                document.getElementById('inputBuyin').value = this.settings.buyin;
+                document.getElementById('inputRebuyChips').value = this.settings.rebuyChips;
+                document.getElementById('inputRebuyCost').value = this.settings.rebuyCost;
+                document.getElementById('inputAddonChips').value = this.settings.addonChips;
+                document.getElementById('inputAddonCost').value = this.settings.addonCost;
+                document.getElementById('inputLevelDuration').value = this.settings.levelDuration;
+            }
+
+            closeSettings() {
+                document.getElementById('settingsModal').classList.remove('active');
+            }
+
+            saveSettings() {
+                this.settings.tournamentName = document.getElementById('inputTournamentName').value;
+                this.settings.startingChips = parseInt(document.getElementById('inputStartingChips').value) || 2000;
+                this.settings.buyin = parseInt(document.getElementById('inputBuyin').value) || 200;
+                this.settings.rebuyChips = parseInt(document.getElementById('inputRebuyChips').value) || 2000;
+                this.settings.rebuyCost = parseInt(document.getElementById('inputRebuyCost').value) || 200;
+                this.settings.addonChips = parseInt(document.getElementById('inputAddonChips').value) || 4000;
+                this.settings.addonCost = parseInt(document.getElementById('inputAddonCost').value) || 200;
+                this.settings.levelDuration = parseInt(document.getElementById('inputLevelDuration').value) || 15;
+
+                this.saveToStorage();
+                this.updateDisplay();
+                this.closeSettings();
+            }
+
+            // Blinds modal
+            openBlinds() {
+                document.getElementById('blindsModal').classList.add('active');
+                this.renderBlindStructure();
+            }
+
+            closeBlinds() {
+                document.getElementById('blindsModal').classList.remove('active');
+            }
+
+            saveBlinds() {
+                this.saveBlindStructure();
+                this.saveToStorage();
+                this.updateDisplay();
+                this.closeBlinds();
+            }
+
+            renderBlindStructure() {
+                const container = document.getElementById('blindStructure');
+                container.innerHTML = '';
+
+                let levelNum = 0;
+                this.settings.blinds.forEach((item, index) => {
+                    const div = document.createElement('div');
+
+                    if (item.isBreak) {
+                        div.className = 'blind-level is-break';
+                        div.innerHTML = `
+                            <span>Pauza</span>
+                            <input type="number" class="break-duration" value="${item.duration}" placeholder="Min" style="grid-column: span 3;">
+                            <span style="font-size: 0.75rem;">min</span>
+                            <button class="btn-remove" data-index="${index}">&times;</button>
+                        `;
+                    } else {
+                        levelNum++;
+                        div.className = 'blind-level';
+                        div.innerHTML = `
+                            <span>L${levelNum}</span>
+                            <input type="number" class="blind-small" value="${item.small}" placeholder="SB">
+                            <input type="number" class="blind-big" value="${item.big}" placeholder="BB">
+                            <input type="number" class="blind-ante" value="${item.ante}" placeholder="Ante">
+                            <input type="number" class="blind-duration" value="${item.duration}" placeholder="Min" style="width: 50px;">
+                            <button class="btn-remove" data-index="${index}">&times;</button>
+                        `;
+                    }
+                    container.appendChild(div);
+                });
+
+                // Bind remove buttons
+                container.querySelectorAll('.btn-remove').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.dataset.index);
+                        this.settings.blinds.splice(index, 1);
+                        this.renderBlindStructure();
+                    });
+                });
+            }
+
+            saveBlindStructure() {
+                const levels = document.querySelectorAll('.blind-level');
+                this.settings.blinds = Array.from(levels).map(level => {
+                    if (level.classList.contains('is-break')) {
+                        return {
+                            duration: parseInt(level.querySelector('.break-duration').value) || 10,
+                            isBreak: true
+                        };
+                    } else {
+                        return {
+                            small: parseInt(level.querySelector('.blind-small').value) || 0,
+                            big: parseInt(level.querySelector('.blind-big').value) || 0,
+                            ante: parseInt(level.querySelector('.blind-ante').value) || 0,
+                            duration: parseInt(level.querySelector('.blind-duration').value) || this.settings.levelDuration,
+                            isBreak: false
+                        };
+                    }
+                });
+            }
+
+            addBlindLevel() {
+                // Find last non-break level
+                let lastLevel = null;
+                for (let i = this.settings.blinds.length - 1; i >= 0; i--) {
+                    if (!this.settings.blinds[i].isBreak) {
+                        lastLevel = this.settings.blinds[i];
+                        break;
+                    }
+                }
+
+                this.settings.blinds.push({
+                    small: lastLevel ? lastLevel.small * 2 : 25,
+                    big: lastLevel ? lastLevel.big * 2 : 50,
+                    ante: lastLevel ? Math.round(lastLevel.ante * 1.5) : 0,
+                    duration: this.settings.levelDuration,
+                    isBreak: false
+                });
+                this.renderBlindStructure();
+            }
+
+            addBreak() {
+                this.settings.blinds.push({
+                    duration: 10,
+                    isBreak: true
+                });
+                this.renderBlindStructure();
+            }
+
+            // Players modal
+            openPlayers() {
+                document.getElementById('playersModal').classList.add('active');
+                document.getElementById('playerCountDisplay').textContent = this.state.playersTotal;
+                document.getElementById('remainingCountDisplay').textContent = this.state.playersRemaining;
+            }
+
+            closePlayers() {
+                document.getElementById('playersModal').classList.remove('active');
+            }
+
+            // Sounds modal
+            openSounds() {
+                document.getElementById('soundsModal').classList.add('active');
+            }
+
+            closeSounds() {
+                document.getElementById('soundsModal').classList.remove('active');
+            }
+
+            // Templates modal
+            openTemplates() {
+                document.getElementById('templatesModal').classList.add('active');
+                this.renderTemplateList();
+            }
+
+            closeTemplates() {
+                document.getElementById('templatesModal').classList.remove('active');
+            }
+
+            saveTemplate() {
+                const name = document.getElementById('templateName').value.trim();
+                if (!name) {
+                    alert('Zadejte název šablony');
+                    return;
+                }
+
+                const templates = this.getTemplates();
+                templates[name] = {
+                    settings: { ...this.settings },
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem('pokerTimerTemplates', JSON.stringify(templates));
+                document.getElementById('templateName').value = '';
+                this.renderTemplateList();
+            }
+
+            getTemplates() {
+                try {
+                    return JSON.parse(localStorage.getItem('pokerTimerTemplates')) || {};
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            renderTemplateList() {
+                const container = document.getElementById('templateList');
+                const templates = this.getTemplates();
+                const names = Object.keys(templates);
+
+                if (names.length === 0) {
+                    container.innerHTML = '<p class="no-templates">Žádné uložené šablony</p>';
+                    return;
+                }
+
+                container.innerHTML = names.map(name => `
+                    <div class="template-item">
+                        <span class="template-name">${name}</span>
+                        <div class="template-actions">
+                            <button class="btn-load" onclick="pokerTimer.loadTemplate('${name}')">Načíst</button>
+                            <button class="btn-delete" onclick="pokerTimer.deleteTemplate('${name}')">Smazat</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            loadTemplate(name) {
+                const templates = this.getTemplates();
+                if (templates[name]) {
+                    this.settings = { ...this.settings, ...templates[name].settings };
+                    this.saveToStorage();
+                    this.updateDisplay();
+                    this.closeTemplates();
+                    alert(`Šablona "${name}" byla načtena`);
+                }
+            }
+
+            deleteTemplate(name) {
+                if (confirm(`Opravdu smazat šablonu "${name}"?`)) {
+                    const templates = this.getTemplates();
+                    delete templates[name];
+                    localStorage.setItem('pokerTimerTemplates', JSON.stringify(templates));
+                    this.renderTemplateList();
+                }
+            }
+
+            exportTemplate() {
+                // Get current HTML document
+                const html = document.documentElement.outerHTML;
+
+                // Create settings object to embed
+                const embeddedSettings = JSON.stringify(this.settings);
+
+                // Insert embedded settings script before closing head tag
+                // Note: split closing tags to avoid breaking parser
+                const settingsScript = '<script id="embeddedSettings">window.EMBEDDED_SETTINGS = ' + embeddedSettings + ';</' + 'script>';
+
+                // Find position to insert (before closing head tag)
+                let exportHtml = '<!DOCTYPE html>\n' + html;
+                exportHtml = exportHtml.replace('</' + 'head>', settingsScript + '\n</' + 'head>');
+
+                // Create and download file
+                const blob = new Blob([exportHtml], { type: 'text/html; charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${this.settings.tournamentName.replace(/[^a-z0-9]/gi, '_')}_pokertimer.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Help modal
+            openHelp() {
+                document.getElementById('helpModal').classList.add('active');
+            }
+
+            closeHelp() {
+                document.getElementById('helpModal').classList.remove('active');
+            }
+
+            // Prizes modal
+            openPrizes() {
+                document.getElementById('prizesModal').classList.add('active');
+                document.getElementById('prizeType').value = this.settings.prizeType || 'percent';
+                this.updatePrizeTypeLabel();
+                this.renderPrizeStructure();
+                this.updatePrizeSummary();
+            }
+
+            closePrizes() {
+                document.getElementById('prizesModal').classList.remove('active');
+            }
+
+            updatePrizeType(type) {
+                this.settings.prizeType = type;
+                this.updatePrizeTypeLabel();
+                this.updatePrizeSummary();
+            }
+
+            updatePrizeTypeLabel() {
+                const label = document.getElementById('prizeTypeLabel');
+                label.textContent = this.settings.prizeType === 'percent' ? 'Procenta (%)' : 'Částka (Kč)';
+            }
+
+            renderPrizeStructure() {
+                const container = document.getElementById('prizeStructureList');
+                container.innerHTML = '';
+
+                const prizes = this.settings.prizes || this.defaultPrizes;
+                prizes.forEach((prize, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'prize-place';
+                    div.innerHTML = `
+                        <span>${prize.place}. místo</span>
+                        <input type="number" class="prize-value" value="${prize.value}" data-index="${index}">
+                        <button class="btn-remove" data-index="${index}">&times;</button>
+                    `;
+                    container.appendChild(div);
+                });
+
+                // Bind remove buttons
+                container.querySelectorAll('.btn-remove').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.dataset.index);
+                        this.settings.prizes.splice(index, 1);
+                        // Renumber places
+                        this.settings.prizes.forEach((p, i) => p.place = i + 1);
+                        this.renderPrizeStructure();
+                        this.updatePrizeSummary();
+                    });
+                });
+
+                // Bind value inputs for live summary update
+                container.querySelectorAll('.prize-value').forEach(input => {
+                    input.addEventListener('input', () => this.updatePrizeSummary());
+                });
+            }
+
+            addPrizePlace() {
+                const prizes = this.settings.prizes || [];
+                const nextPlace = prizes.length + 1;
+                const lastValue = prizes.length > 0 ? Math.max(5, Math.floor(prizes[prizes.length - 1].value / 2)) : 10;
+
+                this.settings.prizes.push({
+                    place: nextPlace,
+                    value: lastValue
+                });
+                this.renderPrizeStructure();
+                this.updatePrizeSummary();
+            }
+
+            updatePrizeSummary() {
+                // Calculate total prize pool
+                const playersTotal = this.state.playersTotal;
+                const totalPrize = (playersTotal * this.settings.buyin) +
+                                  (this.state.rebuys * this.settings.rebuyCost) +
+                                  (this.state.addons * this.settings.addonCost);
+
+                document.getElementById('prizeSummaryTotal').textContent = this.formatNumber(totalPrize) + ' Kč';
+
+                // Calculate sum of prizes from inputs
+                const inputs = document.querySelectorAll('.prize-value');
+                let sum = 0;
+                inputs.forEach(input => {
+                    sum += parseFloat(input.value) || 0;
+                });
+
+                const sumEl = document.getElementById('prizeSummarySum');
+                if (this.settings.prizeType === 'percent') {
+                    sumEl.textContent = sum + '%';
+                    sumEl.style.color = sum === 100 ? '#27ae60' : (sum > 100 ? '#e74c3c' : '#f39c12');
+                } else {
+                    sumEl.textContent = this.formatNumber(sum) + ' Kč';
+                    sumEl.style.color = sum === totalPrize ? '#27ae60' : (sum > totalPrize ? '#e74c3c' : '#f39c12');
+                }
+            }
+
+            savePrizes() {
+                // Save values from inputs
+                const inputs = document.querySelectorAll('.prize-value');
+                inputs.forEach((input, index) => {
+                    if (this.settings.prizes[index]) {
+                        this.settings.prizes[index].value = parseFloat(input.value) || 0;
+                    }
+                });
+
+                this.saveToStorage();
+                this.updateDisplay();
+                this.closePrizes();
+            }
+
+            // Storage
+            saveToStorage() {
+                const data = {
+                    settings: this.settings,
+                    state: this.state
+                };
+                localStorage.setItem('pokerTimer', JSON.stringify(data));
+            }
+
+            loadFromStorage() {
+                try {
+                    // Check for embedded settings from exported HTML file
+                    if (window.EMBEDDED_SETTINGS) {
+                        this.settings = { ...this.settings, ...window.EMBEDDED_SETTINGS };
+                        // Reset state for fresh start with embedded settings
+                        this.state.currentIndex = 0;
+                        this.state.playersTotal = 0;
+                        this.state.playersRemaining = 0;
+                        this.state.rebuys = 0;
+                        this.state.addons = 0;
+                        this.state.totalTimeElapsed = 0;
+                        const firstLevel = this.settings.blinds[0];
+                        if (firstLevel) {
+                            this.state.timeRemaining = (firstLevel.duration || this.settings.levelDuration) * 60;
+                        }
+                        // Save to localStorage so it persists
+                        this.saveToStorage();
+                        return;
+                    }
+
+                    const data = JSON.parse(localStorage.getItem('pokerTimer'));
+                    if (data) {
+                        this.settings = { ...this.settings, ...data.settings };
+                        this.state = { ...this.state, ...data.state };
+                        this.state.isRunning = false; // Always start paused
+
+                        // Migration: convert old currentLevel to currentIndex if needed
+                        if (data.state.currentLevel !== undefined && data.state.currentIndex === undefined) {
+                            this.state.currentIndex = data.state.currentLevel - 1;
+                        }
+
+                        // Ensure timeRemaining is valid for current level
+                        const currentLevel = this.getCurrentData();
+                        if (currentLevel && this.state.timeRemaining <= 0) {
+                            this.state.timeRemaining = (currentLevel.duration || this.settings.levelDuration) * 60;
+                        }
+                    } else {
+                        // No saved data - initialize timeRemaining from first blind level
+                        const firstLevel = this.settings.blinds[0];
+                        if (firstLevel) {
+                            this.state.timeRemaining = (firstLevel.duration || this.settings.levelDuration) * 60;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Žádná uložená data nenalezena');
+                    // Initialize timeRemaining from first blind level
+                    const firstLevel = this.settings.blinds[0];
+                    if (firstLevel) {
+                        this.state.timeRemaining = (firstLevel.duration || this.settings.levelDuration) * 60;
+                    }
+                }
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.pokerTimer = new PokerTimer();
+        });
+    </script>
+</body>
+</html>
